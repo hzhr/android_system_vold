@@ -223,7 +223,6 @@ int Volume::formatVol() {
     }
     setState(Volume::State_Formatting);
 
-    int ret = -1;
     if (initializeMbr(devicePath)) {
         SLOGE("Failed to initialize MBR (%s)", strerror(errno));
         goto err;
@@ -237,11 +236,10 @@ int Volume::formatVol() {
         goto err;
     }
 
-    ret = 0;
-
-err:
     setState(Volume::State_Idle);
-    return ret;
+    return 0;
+err:
+    return -1;
 }
 
 bool Volume::isMountpointMounted(const char *path) {
