@@ -337,11 +337,7 @@ int Volume::mountVol() {
 
         protectFromAutorunStupidity();
 
-        /* There can be only one SEC_ASECDIR, so let it be EXTERNAL_STORAGE */
-        const char *externalPath = getenv("EXTERNAL_STORAGE") ?: "/mnt/sdcard";
-        if (0 != strcmp(getMountpoint(), externalPath)) {
-            SLOGI("Skipping bindmounts for alternate volume (%s)", getMountpoint());
-        } else if (createBindMounts()) {
+        if (createBindMounts()) {
             SLOGE("Failed to create bindmounts (%s)", strerror(errno));
             umount("/mnt/secure/staging");
             setState(Volume::State_Idle);
@@ -524,28 +520,24 @@ int Volume::unmountVol(bool force) {
 
     protectFromAutorunStupidity();
 
-    /* Undo createBindMounts(), which is only called for EXTERNAL_STORAGE */
-    const char *externalPath = getenv("EXTERNAL_STORAGE") ?: "/mnt/sdcard";
-    if (0 == strcmp(getMountpoint(), externalPath)) {
-        /*
-         * Unmount the tmpfs which was obscuring the asec image directory
-         * from non root users
-         */
+    /*
+     * Unmount the tmpfs which was obscuring the asec image directory
+     * from non root users
+     */
 
-        if (doUnmount(Volume::SEC_STG_SECIMGDIR, force)) {
-            SLOGE("Failed to unmount tmpfs on %s (%s)", SEC_STG_SECIMGDIR, strerror(errno));
-            goto fail_republish;
-        }
+    if (doUnmount(Volume::SEC_STG_SECIMGDIR, force)) {
+        SLOGE("Failed to unmount tmpfs on %s (%s)", SEC_STG_SECIMGDIR, strerror(errno));
+        goto fail_republish;
+    }
 
-        /*
-         * Remove the bindmount we were using to keep a reference to
-         * the previously obscured directory.
-         */
+    /*
+     * Remove the bindmount we were using to keep a reference to
+     * the previously obscured directory.
+     */
 
-        if (doUnmount(Volume::SEC_ASECDIR, force)) {
-            SLOGE("Failed to remove bindmount on %s (%s)", SEC_ASECDIR, strerror(errno));
-            goto fail_remount_tmpfs;
-        }
+    if (doUnmount(Volume::SEC_ASECDIR, force)) {
+        SLOGE("Failed to remove bindmount on %s (%s)", SEC_ASECDIR, strerror(errno));
+        goto fail_remount_tmpfs;
     }
 
     /*
