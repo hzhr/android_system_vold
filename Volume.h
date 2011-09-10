@@ -54,7 +54,6 @@ protected:
      * The major/minor tuple of the currently mounted filesystem.
      */
     dev_t mCurrentlyMountedKdev;
-    dev_t mPreviouslyMountedKdev;
 
 public:
     Volume(VolumeManager *vm, const char *label, const char *mount_point);
@@ -70,7 +69,6 @@ public:
 
     virtual int handleBlockEvent(NetlinkEvent *evt);
     virtual dev_t getDiskDevice();
-    virtual dev_t getPartitionDevice();
     virtual void handleVolumeShared();
     virtual void handleVolumeUnshared();
 
