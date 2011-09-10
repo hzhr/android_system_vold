@@ -262,7 +262,6 @@ void DirectVolume::handlePartitionRemoved(const char *devpath, NetlinkEvent *evt
     int major = atoi(evt->findParam("MAJOR"));
     int minor = atoi(evt->findParam("MINOR"));
     char msg[255];
-    int state;
 
     SLOGD("Volume %s %s partition %d:%d removed\n", getLabel(), getMountpoint(), major, minor);
 
@@ -272,8 +271,7 @@ void DirectVolume::handlePartitionRemoved(const char *devpath, NetlinkEvent *evt
      * the removal notification will be sent on the Disk
      * itself
      */
-    state = getState();
-    if (state != Volume::State_Mounted && state != Volume::State_Shared) {
+    if (getState() != Volume::State_Mounted) {
         return;
     }
         
@@ -295,19 +293,6 @@ void DirectVolume::handlePartitionRemoved(const char *devpath, NetlinkEvent *evt
             SLOGE("Failed to unmount volume on bad removal (%s)", 
                  strerror(errno));
             // XXX: At this point we're screwed for now
-        } else {
-            SLOGD("Crisis averted");
-        }
-    } else if (state == Volume::State_Shared) {
-        /* removed during mass storage */
-        snprintf(msg, sizeof(msg), "Volume %s bad removal (%d:%d)",
-                 getLabel(), major, minor);
-        mVm->getBroadcaster()->sendBroadcast(ResponseCode::VolumeBadRemoval,
-                                             msg, false);
-
-        if (mVm->unshareVolume(getLabel(), "ums")) {
-            SLOGE("Failed to unshare volume on bad removal (%s)",
-                strerror(errno));
         } else {
             SLOGD("Crisis averted");
         }
