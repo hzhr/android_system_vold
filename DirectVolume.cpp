@@ -178,6 +178,17 @@ void DirectVolume::handlePartitionAdded(const char *devpath, NetlinkEvent *evt) 
         part_num = 1;
     }
 
+	// Simple hack, please note total partition count can't be more than 4
+	if (part_num > 4) {
+		// extended partition
+		int i = 0;
+		for (i=0; i<MAX_PARTITIONS; i++) {
+			if (mPartMinors[i] == -1) {
+				part_num = i+1;
+				break;
+			}
+		}
+	}
     if (part_num > mDiskNumParts) {
         mDiskNumParts = part_num;
     }
